@@ -4,7 +4,7 @@ from .base import *
 DEBUG = True
 # SECURITY WARNING: change key before production! 
 # manage.py shell -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
-SECRET_KEY = "django-insecure-80%4ua9yonp7*z%2-e)ey_wunwczk9cpvgp9&77uq!b2_g!l=5"
+SECRET_KEY = "$ig7s*(jh*nqlfhcf-qxnc2x20s94ak9jojuet_0#md-*ncl_t"
 
 CORS_ALLOWED_ORIGINS = CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
