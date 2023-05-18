@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Define color codes for output
 COLOR="\e["
 RED="${COLOR}31m"
 GREEN="${COLOR}32m"
@@ -9,53 +10,68 @@ WHITE="${COLOR}m"
 YELLOW="${COLOR}36m"
 GRAY="${COLOR}37m"
 
-# Run dev servers
+# Run development servers
 dev() {
+  # Build and run development Docker images
   echo -e "\n${YELLOW}--[ Building developement images… ]--${WHITE}\n"
   docker-compose up --remove-orphans --build --force-recreate
 }
 
 # Generate NuxtJS static files
 gen() {
+  # Create output directory and set permissions
   echo -e "\n${GREEN}--[ Generating nuxt static files… ]--${WHITE}\n"
   mkdir -p frontend/.output/public
   chmod 777 frontend/.output/public
+  # Build and run NuxtJS Docker image
   docker-compose -f docker-compose.nuxt.yml up --remove-orphans --build --force-recreate
 }
 
 # Run production servers
 prod() {
+  # Generate static files
   gen
+  # Check for .env file and create one if not found
   echo -e "\n${GREEN}--[ Looking for .env file… ]--${WHITE}\n"
   env_dir="backend/backend"
   env_file=".env"
   env_sample="sample.env"
   test -f ${env_dir}/${env_file} || cp ${env_dir}/${env_sample} ${env_dir}/${env_file} && echo "Using .env file created from sample.env!\n"
+  # Build and run production Docker images
   echo -e "\n${GREEN}--[ Building production images… ]--${WHITE}\n"
   docker-compose -f docker-compose.prod.yml up --remove-orphans --build --force-recreate
 }
 
+# Access Wagtail Docker image
 wag() {
+  # Log in to Wagtail Docker image and provide instructions for creating superuser and generating SECRET_KEY
   echo -e "\n${GREEN}--[ Logging in to Wagtail docker image… ]--${WHITE}\n"
   echo -e "To create superuser:\n${YELLOW}./manage.py createsuperuser${WHITE}"
   echo -e "To generate new SECRET_KEY:\n${YELLOW}./manage.py shell -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'${WHITE}\n"
   docker exec -it `docker ps|grep backend|awk '{print $1}'` bash || echo -e "${PURPLE}Is container running?${WHITE}"
 }
 
+# Save Docker image and related files
 save() {
-    mkdir -p ./export
+  # Create export directory
+  mkdir -p ./export
+  # Save Docker image
   echo -e "\n${GREEN}--[ Saving docker image… ]--${WHITE}\n"
   docker save -o ./export/wagtail_gunicorn.tar wagtail_nuxt_web || echo -e "${PURPLE}Something went wrong!${WHITE}"
+  # Save static files, public files, database, .env, and nginx example config
   echo -e "\n${GREEN}--[ Saving static, public files, database, .env and nginx example config… ]--${WHITE}\n"
   cp ./nginx/nginx.conf ./export
   cp -R ./backend/static ./export
   cp ./backend/db.sqlite3 ./export
   cp ./backend/backend/.env ./export
   cp -R ./frontend/.output/public ./export
+  # Save wagtail_nuxt_production.tar.gz
   echo -e "\n${GREEN}--[ Saving wagtail_nuxt_production.tar.gz…]--${WHITE}\n"
   tar czf ./wagtail_nuxt_production.tar.gz export
+  # Clean up export directory
   echo -e "\n${GREEN}--[ Cleaning up…]--${WHITE}\n"
   rm -R ./export
+  # Display instructions for importing and running Docker image
   echo -e "\n${GREEN}--[ DONE ]--${WHITE}\n"
   echo -e "Use ${YELLOW}docker load -i ./wagtail_gunicorn.tar${WHITE} to import docker image."
   echo -e "Create vhost config based on ${YELLOW}nginx.conf${WHITE}."
@@ -73,14 +89,13 @@ save() {
      ./docker-entrypoint.prod.sh${WHITE}"
 }
 
-
-
-# How to use
+# Display usage instructions
 usage() {
   echo -e "\n${GREEN}Usage: ${WHITE}run ${RED}[${YELLOW}dev${RED}/${GREEN}gen${RED}/${PURPLE}prod${RED}]${WHITE}\n"
   echo -e "${YELLOW}dev${GRAY} = serve for developement;\n${GREEN}gen${GRAY} = generate nuxt static files;\n${PURPLE}prod${GRAY} = serve for production (includes ${GREEN}gen${GRAY})${WHITE}"
 }
 
+# Parse command line arguments and call corresponding functions
 case $1 in
   "dev") dev;;
   "gen") gen ;;
