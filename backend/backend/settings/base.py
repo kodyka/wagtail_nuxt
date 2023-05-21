@@ -50,7 +50,12 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles",  
+    "django.contrib.staticfiles",
+    # qcluster
+    'django_q',
+    # 'redis',
+    # 'django-redis',
+    # 'django-q[sentry]',
 ]
 
 GRAPHENE = {
@@ -179,3 +184,22 @@ WAGTAILSEARCH_BACKENDS = {
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 WAGTAILADMIN_BASE_URL = "http://example.com"
+
+# Task queue (django-q)
+
+REDIS_HOST = os.getenv("REDIS_HOST") or "localhost"
+REDIS_PORT = os.getenv("REDIS_PORT") or 6379
+Q_CLUSTER = {
+    "name": "vas3k_club",
+    "workers": 4,
+    "recycle": 500,
+    "timeout": 30,
+    "compress": True,
+    "save_limit": 250,
+    "queue_limit": 5000,
+    "redis": {
+        "host": REDIS_HOST,
+        "port": REDIS_PORT,
+        "db": os.getenv("REDIS_DB") or 0
+    }
+}

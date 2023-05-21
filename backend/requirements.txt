@@ -2,7 +2,14 @@ Django>=4.2.1
 wagtail>=5.0
 gunicorn>=20.1.0
 
+# dotenv
 python-dotenv
 graphene-django
 django-cors-headers
 django-sslserver
+
+# qcluster
+django-q2
+redis
+django-redis
+django-q2[sentry]
