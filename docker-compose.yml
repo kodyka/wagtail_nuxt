@@ -10,6 +10,20 @@ services:
       - "7999:7999"
     command: ["./docker-entrypoint.sh"]
     # network_mode: "host" # vite proxy fails with error 500 without host network
+    environment:
+      - MODE=dev
+      - DEBUG=true
+      - PYTHONUNBUFFERED=1
+      - POSTGRES_DB=vas3k_club
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=postgres
+      - REDIS_DB=0
+      - REDIS_HOST=redis   
+    depends_on:
+      - postgres
+      - redis
+      - queue
 
   frontend:
     build: ./frontend/
@@ -21,7 +35,54 @@ services:
       - "24678:24678"
     command: [sh, -c, "npm install && npm run dev"]
     environment:
-      - API_URL="http://127.0.0.1:7999"
+      - API_URL="http://localhost:7999"
     depends_on:
       - backend
     # network_mode: "host" # vite proxy fails with error 500 without host network
+
+  queue:
+    build: ./backend/
+    command: ["./docker-entrypoint-queue.sh"]
+    environment:
+      - MODE=dev
+      - DEBUG=true
+      - PYTHONUNBUFFERED=1
+      - POSTGRES_DB=vas3k_club
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=postgres
+      - REDIS_DB=0
+      - REDIS_HOST=redis
+    restart: always
+    volumes:
+      - ./backend:/app:delegated
+    depends_on:
+      - postgres
+      - redis
+
+  # cron:
+  #   build: ./backend/
+  #   command: ["./docker-entrypoint-queue.sh"]
+  #   container_name: club_cron
+  #   depends_on:
+  #     - club_app
+  #     - postgres
+  #     - redis
+  #   ports: []
+
+  postgres:
+    image: postgres:11
+    container_name: club_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=vas3k_club
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:alpine
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "6379:6379"
