@@ -1,7 +1,8 @@
-version: "3.7"
+version: "3.9"
 services:
 
   backend:
+    restart: unless-stopped     
     build: ./backend/
     volumes:
       # This mounts local ./backend for applying changes in Wagtail!
@@ -17,15 +18,19 @@ services:
       - POSTGRES_DB=vas3k_club
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_HOST=postgres
+      - POSTGRES_HOST=db
       - REDIS_DB=0
       - REDIS_HOST=redis   
     depends_on:
-      - postgres
-      - redis
-      - queue
-
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      queue:
+        condition: service_started
+    # network_mode: "host"
   frontend:
+    restart: unless-stopped    
     build: ./frontend/
     volumes:
       # This mounts local ./frontend for applying changes in NuxtJS!
@@ -35,12 +40,16 @@ services:
       - "24678:24678"
     command: [sh, -c, "npm install && npm run dev"]
     environment:
-      - API_URL="http://localhost:7999"
+      - API_URL="http://localhost:7999"     
     depends_on:
-      - backend
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
     # network_mode: "host" # vite proxy fails with error 500 without host network
 
   queue:
+    restart: unless-stopped  
     build: ./backend/
     command: ["./docker-entrypoint-queue.sh"]
     environment:
@@ -50,15 +59,16 @@ services:
       - POSTGRES_DB=vas3k_club
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_HOST=postgres
+      - POSTGRES_HOST=db
       - REDIS_DB=0
       - REDIS_HOST=redis
-    restart: always
     volumes:
       - ./backend:/app:delegated
     depends_on:
-      - postgres
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   # cron:
   #   build: ./backend/
@@ -70,15 +80,21 @@ services:
   #     - redis
   #   ports: []
 
-  postgres:
-    image: postgres:11
-    container_name: club_postgres
+  db:
+    restart: always
+    image: postgres:14
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5    
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=vas3k_club
     ports:
       - "5432:5432"
+    # network_mode: "host"
 
   redis:
     image: redis:alpine

@@ -13,3 +13,5 @@ django-q2
 redis
 django-redis
 django-q2[sentry]
+# PostgreSQL adapter
+psycopg2-binary
