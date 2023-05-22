@@ -1,4 +1,15 @@
-# Dockerized **Wagtail 4** + **NuxtJS 3** + **Graphene 3** + **Vuetify 3**
+
+# **TO DO:**
+- to alpine docker
+- to celery?
+https://github.com/saasitive/docker-compose-django-celery-redis-postgres
+https://saasitive.com/tutorial/django-celery-redis-postgres-docker-compose/
+
+# **Examples:**
+- https://github.com/devs-group/wagtail-vue
+
+
+# Dockerized **Wagtail 5** + **NuxtJS 3** + **Graphene 3** + **Vuetify 3**
 ![wagtail_nuxt banner](https://github.com/ordigital/wagtail_nuxt/blob/main/wagtail_nuxt.jpg?raw=true)
 ---
 # **For developement:**
